@@ -47,36 +47,6 @@ def three_opt(tour, distance_matrix):
                         tour = new_tour  # Actualizăm turul pentru a evita copiile inutile
     return best_tour, best_cost
 
-def insertion(tour, distance_matrix):
-    n = len(tour)
-    best_tour = tour[:]
-    best_cost = calculate_tour_cost(tour, distance_matrix)
-    for i in range(n):
-        for j in range(n):
-            if i != j:
-                new_tour = tour[:]
-                city = new_tour.pop(i)
-                new_tour.insert(j, city)
-                new_cost = calculate_tour_cost(new_tour, distance_matrix)
-                if new_cost < best_cost:
-                    best_tour = new_tour[:]
-                    best_cost = new_cost
-    return best_tour, best_cost
-
-def swap(tour, distance_matrix):
-    n = len(tour)
-    best_tour = tour[:]
-    best_cost = calculate_tour_cost(tour, distance_matrix)
-    for i in range(n - 1):
-        for j in range(i + 1, n):
-            new_tour = tour[:]
-            new_tour[i], new_tour[j] = new_tour[j], new_tour[i]
-            new_cost = calculate_tour_cost(new_tour, distance_matrix)
-            if new_cost < best_cost:
-                best_tour = new_tour[:]
-                best_cost = new_cost
-    return best_tour, best_cost
-
 def generate_random_tour(n):
     tour = list(range(n))
     random.shuffle(tour)
@@ -98,7 +68,7 @@ def local_search(initial_tour, distance_matrix, max_iterations):
     best_cost = current_cost
     print("Distanța inițială:", current_cost)
     iteration = 0
-    neighborhood_structures = [two_opt, three_opt, insertion, swap]
+    neighborhood_structures = [two_opt, three_opt]
 
     while iteration < max_iterations:
         improved = False
@@ -124,6 +94,7 @@ def local_search(initial_tour, distance_matrix, max_iterations):
     print("Distanta totala:", best_cost)
 
     return best_tour, best_cost
+
 
 if __name__ == "__main__":
     file_name = "test-dataset.txt"
