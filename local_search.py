@@ -97,7 +97,7 @@ def local_search(initial_tour, distance_matrix, max_iterations):
 
 
 if __name__ == "__main__":
-    file_name = "test-dataset.txt"
+    file_name = "att48_d.txt"
     distance_matrix = read_distance_matrix(file_name)
     n = len(distance_matrix)
     initial_tour = generate_random_tour(n)  # Generăm un tur inițial aleatoriu

@@ -55,7 +55,7 @@ def plot_tour_with_coordinates(tour, distance_cities, coord_cities, coordinates,
     plt.pause(0.1)
     plt.clf()
 
-def two_opt(tour, distance_matrix, distance_cities, coord_cities, coordinates, city_index_map):
+def two_opt(tour, distance_matrix):
     n = len(tour)
     best_tour = tour[:]
     best_cost = calculate_tour_cost(tour, distance_matrix)
@@ -71,10 +71,9 @@ def two_opt(tour, distance_matrix, distance_cities, coord_cities, coordinates, c
                     best_cost = new_cost
                     improved = True
                     tour = new_tour  # Actualizăm turul pentru a evita copiile inutile
-                    plot_tour_with_coordinates(tour, distance_cities, coord_cities, coordinates, city_index_map, color='blue', title='Traseul în timpul 2-opt')
     return best_tour, best_cost
 
-def three_opt(tour, distance_matrix, distance_cities, coord_cities, coordinates, city_index_map):
+def three_opt(tour, distance_matrix):
     n = len(tour)
     best_tour = tour[:]
     best_cost = calculate_tour_cost(tour, distance_matrix)
@@ -91,7 +90,6 @@ def three_opt(tour, distance_matrix, distance_cities, coord_cities, coordinates,
                         best_cost = new_cost
                         improved = True
                         tour = new_tour  # Actualizăm turul pentru a evita copiile inutile
-                        plot_tour_with_coordinates(tour, distance_cities, coord_cities, coordinates, city_index_map, color='green', title='Traseul în timpul 3-opt')
     return best_tour, best_cost
 
 def generate_random_tour(n):
@@ -134,7 +132,7 @@ def read_coordinate_file(file_name):
             city_index_map[city_name] = index  # Adăugăm maparea pentru fiecare oraș
     return cities, coordinates, city_index_map
 
-def local_search_with_plot(initial_tour, distance_matrix, cities, coord_cities, coordinates, city_index_map, max_iterations):
+def local_search_with_plot(initial_tour, distance_matrix, cities, coord_cities, coordinates, city_index_map, max_iterations, plot_frequency=10):
     current_tour = initial_tour[:]
     current_cost = calculate_tour_cost(current_tour, distance_matrix)
     best_tour = current_tour[:]
@@ -151,7 +149,7 @@ def local_search_with_plot(initial_tour, distance_matrix, cities, coord_cities, 
     while iteration < max_iterations:
         improved = False
         for neighborhood in neighborhood_structures:
-            new_tour, new_cost = neighborhood(current_tour, distance_matrix, cities, coord_cities, coordinates, city_index_map)
+            new_tour, new_cost = neighborhood(current_tour, distance_matrix)
             if new_cost < best_cost:
                 best_tour = new_tour[:]
                 best_cost = new_cost
@@ -159,6 +157,8 @@ def local_search_with_plot(initial_tour, distance_matrix, cities, coord_cities, 
                 current_cost = new_cost
                 print("Iterația {}: Distanța optimă locală găsită: {}".format(iteration + 1, current_cost))
                 improved = True
+                if iteration % plot_frequency == 0:
+                    plot_tour_with_coordinates(current_tour, cities, coord_cities, coordinates, city_index_map, color='blue', title=f'Traseul în timpul iterației {iteration + 1}')
                 break
         if not improved:
             break

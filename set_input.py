@@ -5,7 +5,7 @@ from get_input import maramures_communes_data  # Importăm lista de comune din M
 maramures_communes_data.sort(key=lambda x: x.get("population", 0), reverse=True)
 
 # Luăm doar primele 10 cele mai mari localități
-top_10_communes = maramures_communes_data[:30]
+top_10_communes = maramures_communes_data[:100]
 
 # Numele fișierului pentru lista cu cele 10 cele mai mari localități și coordonatele lor
 file_name_communes = "coordinates_top_maramures.txt"

@@ -3,54 +3,43 @@ import time
 import matplotlib.pyplot as plt
 
 def calculate_tour_cost(tour, distance_matrix):
-    cost = 0
-    n = len(tour)
-    for i in range(n):
-        city1 = tour[i]
-        city2 = tour[(i + 1) % n]  # Tratăm turul ca un ciclu
-        cost += distance_matrix[city1][city2]
-    return cost
+    return sum(distance_matrix[tour[i]][tour[(i + 1) % len(tour)]] for i in range(len(tour)))
 
 def two_opt(tour, distance_matrix):
     n = len(tour)
-    best_tour = tour[:]
     best_cost = calculate_tour_cost(tour, distance_matrix)
-    improved = True
-    while improved:
+    while True:
         improved = False
         for i in range(n - 1):
-            for j in range(i + 1, n):
+            for j in range(i + 2, n + (i > 0)):  # Ensuring no adjacent edges are swapped
                 new_tour = tour[:i] + tour[i:j][::-1] + tour[j:]
                 new_cost = calculate_tour_cost(new_tour, distance_matrix)
                 if new_cost < best_cost:
-                    best_tour = new_tour[:]
-                    best_cost = new_cost
+                    tour, best_cost = new_tour, new_cost
                     improved = True
-                    tour = new_tour  # Actualizăm turul pentru a evita copiile inutile
-    return best_tour, best_cost
+        if not improved:
+            break
+    return tour, best_cost
 
 def three_opt(tour, distance_matrix):
     n = len(tour)
-    best_tour = tour[:]
     best_cost = calculate_tour_cost(tour, distance_matrix)
-    improved = True
-    while improved:
+    while True:
         improved = False
         for i in range(n - 2):
-            for j in range(i + 1, n - 1):
-                for k in range(j + 1, n):
+            for j in range(i + 2, n - 1):
+                for k in range(j + 2, n + (i > 0)):
                     new_tour = tour[:i] + tour[j:k] + tour[i:j] + tour[k:]
                     new_cost = calculate_tour_cost(new_tour, distance_matrix)
                     if new_cost < best_cost:
-                        best_tour = new_tour[:]
-                        best_cost = new_cost
+                        tour, best_cost = new_tour, new_cost
                         improved = True
-                        tour = new_tour  # Actualizăm turul pentru a evita copiile inutile
-    return best_tour, best_cost
+        if not improved:
+            break
+    return tour, best_cost
 
 def insertion(tour, distance_matrix):
     n = len(tour)
-    best_tour = tour[:]
     best_cost = calculate_tour_cost(tour, distance_matrix)
     for i in range(n):
         for j in range(n):
@@ -60,13 +49,11 @@ def insertion(tour, distance_matrix):
                 new_tour.insert(j, city)
                 new_cost = calculate_tour_cost(new_tour, distance_matrix)
                 if new_cost < best_cost:
-                    best_tour = new_tour[:]
-                    best_cost = new_cost
-    return best_tour, best_cost
+                    tour, best_cost = new_tour, new_cost
+    return tour, best_cost
 
 def swap(tour, distance_matrix):
     n = len(tour)
-    best_tour = tour[:]
     best_cost = calculate_tour_cost(tour, distance_matrix)
     for i in range(n - 1):
         for j in range(i + 1, n):
@@ -74,9 +61,8 @@ def swap(tour, distance_matrix):
             new_tour[i], new_tour[j] = new_tour[j], new_tour[i]
             new_cost = calculate_tour_cost(new_tour, distance_matrix)
             if new_cost < best_cost:
-                best_tour = new_tour[:]
-                best_cost = new_cost
-    return best_tour, best_cost
+                tour, best_cost = new_tour, new_cost
+    return tour, best_cost
 
 def generate_random_tour(n):
     tour = list(range(n))
@@ -85,12 +71,11 @@ def generate_random_tour(n):
 
 def generate_perturbed_tour(tour):
     n = len(tour)
-    perturbed_tour = tour[:]
-    num_changes = random.randint(1, n // 4)  # Controlăm gradul de perturbare
+    num_changes = random.randint(1, n // 4)
     for _ in range(num_changes):
         i, j = random.sample(range(n), 2)
-        perturbed_tour[i], j = perturbed_tour[j], perturbed_tour[i]
-    return perturbed_tour
+        tour[i], tour[j] = tour[j], tour[i]
+    return tour
 
 def read_distance_matrix(file_name):
     with open(file_name, "r", encoding="utf-8") as file:
@@ -99,7 +84,7 @@ def read_distance_matrix(file_name):
         distance_matrix = []
         for line in lines:
             parts = line.strip().split("|")
-            if not cities:  # Dacă lista orașelor este goală, adăugăm numele orașelor
+            if not cities:
                 cities = [part.strip() for part in parts[1:]]
             else:
                 distances = [int(d) for d in parts[1:]]
@@ -114,17 +99,17 @@ def print_tour(tour, cities):
 def read_coordinate_file(file_name):
     cities = []
     coordinates = []
-    city_index_map = {}  # Mapare între numele orașului și indexul său în listă
+    city_index_map = {}
     with open(file_name, "r", encoding="utf-8") as file:
-        next(file)  # Skip header
+        next(file)
         for index, line in enumerate(file):
             parts = line.strip().split(",")
-            city_name = parts[0].strip()  # Eliminăm spațiile în exces
+            city_name = parts[0].strip()
             longitude = float(parts[1].strip())
             latitude = float(parts[2].strip())
             cities.append(city_name)
             coordinates.append((longitude, latitude))
-            city_index_map[city_name] = index  # Adăugăm maparea pentru fiecare oraș
+            city_index_map[city_name] = index
     return cities, coordinates, city_index_map
 
 def plot_tour_with_coordinates(tour, distance_cities, coord_cities, coordinates, city_index_map, color='gray', title=''):
@@ -182,9 +167,8 @@ def variable_neighborhood_search(initial_tour, distance_matrix, distance_cities,
     neighborhood_structures = [two_opt, three_opt, insertion, swap]
     explored_solutions = set()
 
-    plt.ion()  # Activăm modul interactiv
+    plt.ion()
 
-    # Afișăm traseul inițial
     plot_tour_with_coordinates(initial_tour, distance_cities, coord_cities, coordinates, city_index_map, color='gray', title='Traseul inițial')
 
     while iteration < max_iterations:
@@ -197,39 +181,35 @@ def variable_neighborhood_search(initial_tour, distance_matrix, distance_cities,
                 current_tour = new_tour[:]
                 current_cost = new_cost
                 print("Iterația {}: Distanța optimă locală găsită: {}".format(iteration + 1, current_cost))
-                diversification_counter = 0  # Resetăm contorul de diversificare
+                diversification_counter = 0
                 improved = True
-                # Afișăm traseul actualizat
                 plot_tour_with_coordinates(current_tour, distance_cities, coord_cities, coordinates, city_index_map, color='blue', title=f'Iterația {iteration + 1}')
                 break
         if not improved:
             diversification_counter += 1
         iteration += 1
 
-        # Verificăm dacă trebuie să aplicăm mecanismul de diversificare
         if diversification_counter >= diversification_interval:
             print("Aplicăm mecanismul de diversificare...")
             perturbed_tour = generate_perturbed_tour(current_tour)
             perturbed_cost = calculate_tour_cost(perturbed_tour, distance_matrix)
-            while tuple(perturbed_tour) in explored_solutions:
-                perturbed_tour = generate_perturbed_tour(current_tour)
-                perturbed_cost = calculate_tour_cost(perturbed_tour, distance_matrix)
-            current_tour = perturbed_tour
-            current_cost = perturbed_cost
-            diversification_counter = 0
+            if perturbed_cost < best_cost:
+                current_tour = perturbed_tour
+                current_cost = perturbed_cost
+                best_tour = perturbed_tour[:]
+                best_cost = perturbed_cost
+                diversification_counter = 0
+                print("Diversificarea a condus la o îmbunătățire: {}".format(current_cost))
 
         explored_solutions.add(tuple(current_tour))
 
-    plt.ioff()  # Dezactivăm modul interactiv
+    plt.ioff()
 
-    # Afișăm traseul optim găsit
     print("Traseul optim găsit:")
     print_tour(best_tour, distance_cities)
 
-    # Afișăm distanța totală calculată
     print("Distanta totala:", best_cost)
 
-    # Afișăm traseul optim final
     plot_tour_with_coordinates(best_tour, distance_cities, coord_cities, coordinates, city_index_map, color='green', title='Traseul optim final')
 
     return best_tour, best_cost
@@ -238,21 +218,20 @@ if __name__ == "__main__":
     distance_file_name = "distance_matrix_top_maramures.txt"
     coord_file_name = "coordinates_top_maramures.txt"
 
-    # Citim matricea de distanțe și numele orașelor
     distance_cities, distance_matrix = read_distance_matrix(distance_file_name)
     n = len(distance_matrix)
 
-    # Citim coordonatele orașelor
     coord_cities, coordinates, city_index_map = read_coordinate_file(coord_file_name)
 
-    # Generăm un tur inițial aleatoriu
     initial_tour = generate_random_tour(n)
-    max_iterations = 100  # Numărul maxim de iterații
-    diversification_interval = 20  # Intervalul de diversificare
+    max_iterations = 100
+    diversification_interval = 20
 
     start_time = time.time()
 
-    best_tour, best_cost = variable_neighborhood_search(initial_tour, distance_matrix, distance_cities, coord_cities, coordinates, city_index_map, max_iterations, diversification_interval)
+    best_tour, best_cost = variable_neighborhood_search(initial_tour, distance_matrix, distance_cities, coord_cities,
+                                                        coordinates, city_index_map, max_iterations,
+                                                        diversification_interval)
 
     end_time = time.time()
     execution_time = end_time - start_time

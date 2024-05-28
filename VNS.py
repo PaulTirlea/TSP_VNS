@@ -2,13 +2,11 @@ import random
 import time
 
 def calculate_tour_cost(tour, distance_matrix):
-    cost = 0
-    n = len(tour)
-    for i in range(n):
-        city1 = tour[i]
-        city2 = tour[(i + 1) % n]  # Tratăm turul ca un ciclu
-        cost += distance_matrix[city1][city2]
-    return cost
+    return sum(distance_matrix[tour[i]][tour[(i + 1) % len(tour)]] for i in range(len(tour)))
+
+def two_opt_swap(tour, i, k):
+    new_tour = tour[:i] + tour[i:k][::-1] + tour[k:]
+    return new_tour
 
 def two_opt(tour, distance_matrix):
     n = len(tour)
@@ -18,14 +16,13 @@ def two_opt(tour, distance_matrix):
     while improved:
         improved = False
         for i in range(n - 1):
-            for j in range(i + 1, n):
-                new_tour = tour[:i] + tour[i:j][::-1] + tour[j:]
+            for k in range(i + 1, n):
+                new_tour = two_opt_swap(tour, i, k)
                 new_cost = calculate_tour_cost(new_tour, distance_matrix)
                 if new_cost < best_cost:
                     best_tour = new_tour[:]
                     best_cost = new_cost
                     improved = True
-                    tour = new_tour  # Actualizăm turul pentru a evita copiile inutile
     return best_tour, best_cost
 
 def three_opt(tour, distance_matrix):
@@ -44,7 +41,6 @@ def three_opt(tour, distance_matrix):
                         best_tour = new_tour[:]
                         best_cost = new_cost
                         improved = True
-                        tour = new_tour  # Actualizăm turul pentru a evita copiile inutile
     return best_tour, best_cost
 
 def insertion(tour, distance_matrix):
@@ -151,8 +147,9 @@ def variable_neighborhood_search(initial_tour, distance_matrix, max_iterations, 
 
     return best_tour, best_cost
 
+
 if __name__ == "__main__":
-    file_name = "test-dataset.txt"
+    file_name = "att48_d.txt"
     distance_matrix = read_distance_matrix(file_name)
     n = len(distance_matrix)
     initial_tour = generate_random_tour(n)  # Generăm un tur inițial aleatoriu
